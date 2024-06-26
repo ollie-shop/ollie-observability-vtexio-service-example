@@ -1,113 +1,141 @@
-# Service Example
+# Example of @ollie-dev/vtex-io-logger in the VTEX IO "Service Example App"
 
-A reference app implementing a VTEX IO service with HTTP route handlers.
+The purpose of this repo is to how quickly do the setup of the [**@ollie-dev/vtex-io-logger**](https://www.npmjs.com/package/@ollie-dev/vtex-io-logger) which is a npm package designed to enhance the logging and observability capabilities for VTEX IO developers and merchants.
 
-![Service Example Architecture](https://user-images.githubusercontent.com/18706156/77381360-72489680-6d5c-11ea-9da8-f4f03b6c5f4c.jpg)
+This repo is a copy of the [**VTEX IO Service Example App**](https://github.com/vtex-apps/service-example), with the necessary modifications to include the Ollie Logger.
 
-We use [**KoaJS**](https://koajs.com/) as the web framework, so you might want to get into that
+From the documentation on of the Ollie Logger you have an example of the **Basic Usage**
 
-We also use the [**node-vtex-api**](https://github.com/vtex/node-vtex-api), a VTEX set of utilities for Node services. You can import this package using NPM from `@vtex/api` (already imported on this project)
+Simply import and use `withFullLogger` to add logging to your service:
 
-- Start from `node/index.ts` and follow the comments and imports :)
+```typescript
+import { withFullLogger } from "@ollie-dev/vtex-io-logger";
 
-## Defining routes on _service.json_ 
-```json
-{
-  "memory": 256,
-  "ttl": 10,
-  "timeout": 2,
-  "minReplicas": 2,
-  "maxReplicas": 4,
-  "routes": {
-    "status": {
-      "path": "/_v/status/:code",
-      "public": true
-    }
-  }
-}
+// Your service setup
+const service = new Service({
+  // ... your configurations
+});
+
+export default withFullLogger(service);
 ```
 
-The `service.json` file that sits on the root of the `node` folder holds information about this service, like the maximum timeout and number of replicas, but also sets its routes. 
+In the Service Example app you can apply this to the `node/index.ts` file
 
-Koa uses the [path-to-regexp](https://github.com/pillarjs/path-to-regexp) format for defining routes and, as seen in the example, we use the `:code` notation for declaring a route param named `code`. An HTTP request for `https://{{workspace}}--{{account}}.myvtex.com/_v/status/500` will match the route we've defined. 
-
-For each _key_ on the `routes` object, there should be a corresponding entry on the exported Service object on `node/index.ts`. This will hook your code to a specific route.
-
-## Access Control
-You can also provide a `public` option for each route. If `true`, that resource will be reachable to everyone on the internet. If `false`, VTEX credentials will be requested as well.
-
-Another way of controlling access to specific routes is using **ReBACs (Resource-based access)**, which supports a more robust configuration. You can read more [on this document](https://docs.google.com/document/d/1ZxNHMFIXfXz3BgTN9xyrHL3V5dYz14wivYgQjRBZ6J8/edit#heading=h.z7pad3qd2qw7) (VTEX only).
-
-### Query String
-For `?accepting=query-string`, you **don't need to declare anything**, as any query provided to the URL will already be available for you to use on the code as `ctx.query`, already parsed as an object, or `ctx.queryString`, taken directly from the URL as a string.
-
-### Route Params
-Route Params will be available for you to use on the code as `ctx.vtex.params`, already parsed as an object.
-For a path like `/_v/status/:code`, if you receive the request `/_v/status/200`, `ctx.vtex.params` will return `{ code: '200' }`
-
-### HTTP methods
-
-When you define a route on the `service.json`, your NodeJS handlers for that route will be triggered on every HTTP method (GET, POST, PUT...), so if you need to handle them separately, you need to implement a "sub-router". Fortunately, the _node-vtex-api_ provides a helper function `method`, exported from `@vtex/api`, to accomplish that behavior. Instead of passing your handlers directly to the corresponding route on `index.ts`, you pass a `method` call passing an object with the desired method as key and one handler as its corresponding value. 
-
-Check this example:
 ```typescript
-import { method } from '@vtex/api'
-...
+import type { ClientsConfig, RecorderState } from '@vtex/api'
+import { LRUCache, method, Service } from '@vtex/api'
 
-export default new Service<Clients, State>({
+import type { ContextWithOllie } from '@ollie-dev/vtex-io-logger'
+import { withFullLogger } from '@ollie-dev/vtex-io-logger'
+
+import { Clients } from './clients'
+import { status } from './middlewares/status'
+import { validate } from './middlewares/validate'
+import logger from './utils/logger'
+
+const TIMEOUT_MS = 800
+const memoryCache = new LRUCache<string, any>({ max: 5000 })
+
+metrics.trackCache('status', memoryCache)
+
+const clients: ClientsConfig<Clients> = {
+  implementation: Clients,
+  options: {
+    default: {
+      retries: 2,
+      timeout: TIMEOUT_MS,
+    },
+    status: {
+      memoryCache,
+    },
+  },
+}
+
+declare global {
+  type Context = ContextWithOllie<Clients, State>
+  interface State extends RecorderState {
+    code: number
+  }
+}
+
+const service = new Service({
   clients,
   routes: {
     status: method({
-      GET: statusGetHandler,
-      POST: statusPostHandler,
+      GET: [validate, status],
     }),
   },
 })
+
+export default withFullLogger(service, { logger })
 ```
 
-## Throwing errors
+Once this step is done, the "Service" will start to be logged
 
-When building an HTTP service, we should follow HTTP rules regarding data types, cache, authorization, and status codes. Our example app sets a `ctx.status` value that will be used as an HTTP status code return value, but often, we also want to give proper information about errors.
+## Connecting with External Loggers
 
-The **node-vtex-api** already exports a handful of **custom error classes** that can be used for that purpose, like the `NotFoundError`. You just need to throw them inside one of the route handlers that the appropriate response will be sent to the server.
+Now the next step is to connect your app with an external logging systems like OpenSearch.
+
+It is important to note that you can stream the logs anywhere. If you don't have a Datalake, you can contact Ollie to subscribe to the Ollie Data Studio, where we provide a managed services suite using Grafana and Opensearch. 
 
 ```typescript
-import { UserInputError } from '@vtex/api'
+import pino from 'pino'
+import pinoOpenSearch from 'pino-opensearch'
 
-export async function validate(ctx: Context, next: () => Promise<any>) {
-  const { code } = ctx.vtex.route.params
-  if (isNaN(code) || code < 100 || code > 600) {
-    throw new UserInputError('Code must be a number between 100 and 600')
-  }
-...
+const streamToOpenSearch = pinoOpenSearch({
+  index: 'OLLIE_OBSERVABILITY_OPENSEARCH_INDEX',
+  node: 'OLLIE_OBSERVABILITY_OPENSEARCH_URL',
+  'es-version': 7,
+  'flush-bytes': 1000,
+  'flush-interval': 5000,
+  auth: {
+    username: 'OLLIE_OBSERVABILITY_OPENSEARCH_USERNAME',
+    password: 'OLLIE_OBSERVABILITY_OPENSEARCH_PASSWORD',
+  },
+})
+
+streamToOpenSearch.on('insertError', (error: { document: any }) => {
+  const documentThatFailed = error.document
+  console.log(`An error occurred insert document:`, documentThatFailed)
+})
+
+streamToOpenSearch.on('unknown', (line: any, error: any) =>
+  console.log(
+    'Expect to see a lot of these with Pino Pretty turned on.',
+    error,
+    line
+  )
+)
+
+// Capture errors like unable to connect Elasticsearch instance.
+streamToOpenSearch.on('error', (error: any) => {
+  console.error('Opensearch client error:', error)
+})
+// Capture errors returned from Elasticsearch, "it will be called every time a document can't be indexed".
+streamToOpenSearch.on('insertError', (error: any) => {
+  console.error('Opensearch server error:', error)
+})
+
+const logger = pino(
+  { level: 'info' || 'warn' || 'error' || 'debug' },
+  streamToOpenSearch
+)
+
+export default logger
 ```
+## Create an outbound access policy to your external URL
+Considering that this is a VTEX IO app, The last step is for you to allow the app to connect with external endpoints. This is done in the `manifest.json` file.
+Here you should include the URL of the system the logs will be sent to. In the example below its the URL of the Ollie Data Studio. 
 
-You can check all the available errors [here](https://github.com/vtex/node-vtex-api/tree/fd6139349de4e68825b1074f1959dd8d0c8f4d5b/src/errors), but some are not useful for just-HTTP services. Check the most useful ones:
-
-|Error Class | HTTP Code |
-|--|:--:|
-| `UserInputError` | 400 |
-| `AuthenticationError` | 401 |
-| `ForbiddenError` | 403 |
-| `NotFoundError` | 404 |
-
-You can also **create your custom error**, just see how it's done above ;)
-
-## Reading a JSON body
-
-When writing POST or PUT handlers, for example, you often need to have access to the **request body** that comes in a JSON format, which is not provided directly by the handler function.
-
-For this, you have to use the [co-body](https://www.npmjs.com/package/co-body) package that will parse the request into a readable JSON object, used as below: 
-```typescript
-import { json } from 'co-body'
-export async function method(ctx: Context, next: () => Promise<any>) {
-    const body = await json(ctx.req)
 ```
-
-## Testing
-
-`@vtex/test-tools` and `@types/jest` should be installed on `./node` package as `devDependencies`.
-
-Run `vtex test` and [Jest](https://jestjs.io/) will do its thing.
-
-Check the `node/__tests__/simple.test.ts` test case and also [Jest's Documentation](https://jestjs.io/docs/en/getting-started).
+"policies": [
+   ...
+    {
+      "name": "outbound-access",
+      "attrs": {
+        "host": "search-ollieflare-milb6ca7dh6v2kpfbai45ovh5u.us-east-1.es.amazonaws.com",
+        "path": "*"
+      }
+    },
+  ...
+```
