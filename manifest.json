@@ -1,0 +1,71 @@
+{
+  "name": "observability-service-example",
+  "vendor": "olliepartnerus",
+  "version": "0.0.2",
+  "title": "Service Example",
+  "description": "Reference app for VTEX IO Services using Ollie Observability",
+  "mustUpdateAt": "2018-01-04",
+  "categories": [],
+  "dependencies": {},
+  "builders": {
+    "node": "6.x",
+    "docs": "0.x"
+  },
+  "scripts": {
+    "prereleasy": "bash lint.sh"
+  },
+  "credentialType": "absolute",
+  "policies": [
+    {
+      "name": "outbound-access",
+      "attrs": {
+        "host": "httpstat.us",
+        "path": "*"
+      }
+    },
+    {
+      "name": "outbound-access",
+      "attrs": {
+        "host": "search-ollieflare-milb6ca7dh6v2kpfbai45ovh5u.us-east-1.es.amazonaws.com",
+        "path": "*"
+      }
+    },
+    {
+      "name": "colossus-fire-event"
+    },
+    {
+      "name": "colossus-write-logs"
+    }
+  ],
+  "settingsSchema": {
+    "title": "Ollie Observability - Settings",
+    "type": "object",
+    "properties": {
+      "indexOllieObservability": {
+        "title": "Ollie Observability Index",
+        "description": "Ollie Observability provided Index",
+        "type": "string",
+        "minLength": 1
+      },
+      "userOllieObservability": {
+        "title": "Ollie Observability User",
+        "description": "Ollie Observability User",
+        "type": "string",
+        "minLength": 1
+      },
+      "tokenOllieObservability": {
+        "title": "Ollie Observability Token",
+        "description": "Ollie Observability Token",
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128
+      }
+    }
+  },
+  "settingsUiSchema": {
+    "tokenOllieObservability": {
+      "ui:widget": "password"
+    }
+  },
+  "$schema": "https://raw.githubusercontent.com/vtex/node-vtex-api/master/gen/manifest.schema"
+}
