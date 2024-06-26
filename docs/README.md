@@ -4,7 +4,7 @@ The purpose of this repo is to how quickly do the setup of the [**@ollie-dev/vte
 
 This repo is a copy of the [**VTEX IO Service Example App**](https://github.com/vtex-apps/service-example), with the necessary modifications to include the Ollie Logger.
 
-From the documentation on of the Ollie Logger you have an example of the **Basic Usage**
+From the documentation of the Ollie Logger you have an example of the **Basic Usage**
 
 Simply import and use `withFullLogger` to add logging to your service:
 
@@ -76,7 +76,11 @@ Once this step is done, the "Service" will start to be logged
 
 Now the next step is to connect your app with an external logging systems like OpenSearch.
 
-It is important to note that you can stream the logs anywhere. If you don't have a Datalake, you can contact Ollie to subscribe to the Ollie Data Studio, where we provide a managed services suite using Grafana and Opensearch. 
+We use [**Pino**](https://www.npmjs.com/package/pino-opensearch) as the logger and Pino already has these packages that can stream data to various systems. 
+
+It is important to note that you can stream the logs anywhere. This is up to you. 
+
+Howeber, If you don't have a Datalake, you can contact Ollie to subscribe to the Ollie Data Studio, where we provide a managed services suite using Grafana and Opensearch. The example below is a configuration of the Ollie Data Studio Opensearch.
 
 ```typescript
 import pino from 'pino'
@@ -123,6 +127,7 @@ const logger = pino(
 
 export default logger
 ```
+
 ## Create an outbound access policy to your external URL
 Considering that this is a VTEX IO app, The last step is for you to allow the app to connect with external endpoints. This is done in the `manifest.json` file.
 Here you should include the URL of the system the logs will be sent to. In the example below its the URL of the Ollie Data Studio. 
@@ -139,3 +144,9 @@ Here you should include the URL of the system the logs will be sent to. In the e
     },
   ...
 ```
+
+## Visualizing your logs
+
+If you are a customer of Ollie Data Studio you should be able to query your logs and create your own dashboards
+<img width="1629" alt="image" src="https://github.com/ollie-shop/ollie-observability-vtexio-service-example/assets/23402009/f5d53b11-06a2-48c5-85d1-d76d7d43459b">
+
