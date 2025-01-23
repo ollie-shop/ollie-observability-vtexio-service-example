@@ -5,7 +5,7 @@ import pinoOpenSearch from 'pino-opensearch'
 
 const streamToOpenSearch = pinoOpenSearch({
   index: 'OLLIE_OBSERVABILITY_OPENSEARCH_INDEX',
-  node: 'OLLIE_OBSERVABILITY_OPENSEARCH_URL',
+  node: 'https://search-ollieflare-milb6ca7dh6v2kpfbai45ovh5u.us-east-1.es.amazonaws.com',
   'es-version': 7,
   'flush-bytes': 1000,
   'flush-interval': 5000,

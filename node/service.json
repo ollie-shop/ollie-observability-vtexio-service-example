@@ -5,6 +5,7 @@
   "minReplicas": 2,
   "maxReplicas": 4,
   "workers": 1,
+  "runtimeArgs": ["-r dotenv/config"],
   "routes": {
     "status": {
       "path": "/_v/status/:code",

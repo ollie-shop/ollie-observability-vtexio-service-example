@@ -1,3 +1,4 @@
+import 'newrelic'
 import type { ClientsConfig, RecorderState } from '@vtex/api'
 import { LRUCache, method, Service } from '@vtex/api'
 import type { ContextWithOllie } from '@ollie-dev/vtex-io-logger'
@@ -9,6 +10,8 @@ import { validate } from './middlewares/validate'
 import logger from './utils/logger'
 
 const TIMEOUT_MS = 800
+
+console.log(process.env)
 
 // Create a LRU memory cache for the Status client.
 // The 'max' parameter sets the size of the cache.

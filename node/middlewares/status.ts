@@ -1,3 +1,5 @@
+import newrelic from 'newrelic'
+
 import { logInfo } from '../utils/applicationLog'
 
 export async function status(ctx: Context, next: () => Promise<any>) {
@@ -13,6 +15,9 @@ export async function status(ctx: Context, next: () => Promise<any>) {
     code,
   })
 
+  // Log event to New Relic
+  newrelic.recordCustomEvent('StatusCodeReceived', { code })
+
   const statusResponse = await statusClient.getStatus(code)
 
   // console.info('Status response:', statusResponse)
@@ -21,6 +26,9 @@ export async function status(ctx: Context, next: () => Promise<any>) {
     msg: 'status response',
     statusResponse,
   })
+
+  // Log event to New Relic
+  // newrelic.recordCustomEvent('StatusResponseReceived', { statusResponse })
 
   const {
     headers,
