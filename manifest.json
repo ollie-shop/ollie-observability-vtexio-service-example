@@ -1,7 +1,7 @@
 {
   "name": "observability-service-example",
   "vendor": "olliepartnerus",
-  "version": "0.0.2",
+  "version": "0.0.5",
   "title": "Service Example",
   "description": "Reference app for VTEX IO Services using Ollie Observability",
   "mustUpdateAt": "2018-01-04",
@@ -26,7 +26,7 @@
     {
       "name": "outbound-access",
       "attrs": {
-        "host": "search-ollieflare-milb6ca7dh6v2kpfbai45ovh5u.us-east-1.es.amazonaws.com",
+        "host": "logs.us-east-1.amazonaws.com",
         "path": "*"
       }
     },

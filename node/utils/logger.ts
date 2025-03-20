@@ -1,46 +1,27 @@
 /* eslint-disable no-console */
 import pino from 'pino'
-// @ts-ignore
-import pinoOpenSearch from 'pino-opensearch'
 
-const streamToOpenSearch = pinoOpenSearch({
-  index: 'OLLIE_OBSERVABILITY_OPENSEARCH_INDEX',
-  node: 'OLLIE_OBSERVABILITY_OPENSEARCH_URL',
-  'es-version': 7,
-  'flush-bytes': 1000,
-  'flush-interval': 5000,
-  auth: {
-    username: 'OLLIE_OBSERVABILITY_OPENSEARCH_USERNAME',
-    password: 'OLLIE_OBSERVABILITY_OPENSEARCH_PASSWORD',
-  },
+const transport = pino.transport({
+  target: '@serdnam/pino-cloudwatch-transport',
+  options: {
+    logGroupName: 'OllieVTEXIOObservability',
+    logStreamName: `OLLIE_OBSERVABILITY_CLOUDWATCH_LOG_STREAM_${new Date().toISOString()}`,
+    awsRegion: 'us-east-1',
+    awsAccessKeyId: 'ASIAQS3GELX7EIBUU7MG',
+    awsSecretAccessKey: 'EkH3wnYEjUmCgA1n9BmfoIRw0nenExt3c8U639q6',
+    interval: 5000, // Enviar logs a cada 5 segundos
+    batchSize: 1000, // Tamanho máximo do lote em bytes
+  }
 })
 
-streamToOpenSearch.on('insertError', (error: { document: any }) => {
-  const documentThatFailed = error.document
-
-  console.log(`An error occurred insert document:`, documentThatFailed)
-})
-
-streamToOpenSearch.on('unknown', (line: any, error: any) =>
-  console.log(
-    'Expect to see a lot of these with Pino Pretty turned on.',
-    error,
-    line
-  )
-)
-
-// Capture errors like unable to connect Elasticsearch instance.
-streamToOpenSearch.on('error', (error: any) => {
-  console.error('Opensearch client error:', error)
-})
-// Capture errors returned from Elasticsearch, "it will be called every time a document can't be indexed".
-streamToOpenSearch.on('insertError', (error: any) => {
-  console.error('Opensearch server error:', error)
+// Captura erros não tratados durante o envio para CloudWatch
+process.on('uncaughtException', (error: Error) => {
+  console.error('Falha ao enviar logs para CloudWatch:', error)
 })
 
 const logger = pino(
-  { level: 'info' || 'warn' || 'error' || 'debug' },
-  streamToOpenSearch
+  { level: process.env.LOG_LEVEL || 'warn' },
+  transport
 )
 
 export default logger
