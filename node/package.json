@@ -14,7 +14,7 @@
     "@vtex/api": "6.47.0",
     "@vtex/test-tools": "^1.0.0",
     "@vtex/tsconfig": "^0.5.6",
-    "olliepartnerus.observability-service-example": "https://observability--olliepartnerus.myvtex.com/_v/private/typings/linked/v1/olliepartnerus.observability-service-example@0.0.2+build1718378585/public/_types/react",
+    "olliepartnerus.observability-service-example": "https://observability--olliepartnerus.myvtex.com/_v/private/typings/linked/v1/olliepartnerus.observability-service-example@0.0.7+build1742582009/public/_types/react",
     "typescript": "3.9.7"
   },
   "resolutions": {

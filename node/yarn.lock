@@ -4828,9 +4828,9 @@ object.pick@^1.3.0:
   dependencies:
     isobject "^3.0.1"
 
-"olliepartnerus.observability-service-example@https://observability--olliepartnerus.myvtex.com/_v/private/typings/linked/v1/olliepartnerus.observability-service-example@0.0.2+build1718378585/public/_types/react":
+"olliepartnerus.observability-service-example@https://observability--olliepartnerus.myvtex.com/_v/private/typings/linked/v1/olliepartnerus.observability-service-example@0.0.7+build1742582009/public/_types/react":
   version "0.0.0"
-  resolved "https://observability--olliepartnerus.myvtex.com/_v/private/typings/linked/v1/olliepartnerus.observability-service-example@0.0.2+build1718378585/public/_types/react#fa7a0347e046eab3dd768998fc9252b2c0dd5aef"
+  resolved "https://observability--olliepartnerus.myvtex.com/_v/private/typings/linked/v1/olliepartnerus.observability-service-example@0.0.7+build1742582009/public/_types/react#fa7a0347e046eab3dd768998fc9252b2c0dd5aef"
 
 on-exit-leak-free@^2.1.0:
   version "2.1.2"
